@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Router} from '@angular/router';
 import {AppComponent} from '../../app.component';
 import {UserCredentials} from '../../model/user-credentials';
@@ -21,6 +21,17 @@ export class AuthService {
       }));
   }
 
+  private getHeaders(): HttpHeaders {
+    const token: string = localStorage.getItem('authToken');
+
+    const headers = new HttpHeaders().set('Authorization', 'Basic ' + token);
+
+    headers.append('Accept', 'application/json');
+    headers.append('Content-Type', 'application/json');
+
+    return headers;
+  }
+
   public logIn(user: UserCredentials) {
     return this.http.post(AppComponent.API_URL + '/users/login', user)
       .pipe(tap(data => {
@@ -36,16 +47,20 @@ export class AuthService {
 
   logOut() {
     const user: UserCredentials = JSON.parse(localStorage.getItem('currentUser'));
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('currentUser');
 
-    return this.http.post(AppComponent.API_URL + '/users/logout', user).subscribe(
+    return this.http.post(AppComponent.API_URL + '/users/logout', user, {headers: this.getHeaders()}).subscribe(
       data => {
-        this.router.navigate(['auth/login']).then(r => console.log(r));
+        console.log(data);
         this.authenticated = false;
       },
       error => {
-        console.log('logout error: ' + error);
+        console.log('logout error: ' + error.toString());
+      }
+      )
+      .add(() => {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
+        window.location.reload();
       });
   }
 

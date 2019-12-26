@@ -33,7 +33,7 @@ export class PointsService {
       this.points.next(data as Point[]);
       console.log('points got');
     }, (err: HttpErrorResponse) => {
-      if (err.status == 401 || err.status == 401 )
+      if (err.status == 401 || err.status == 403 )
         this.authService.logOut();
     });
   }
